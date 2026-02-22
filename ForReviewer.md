@@ -5,23 +5,24 @@
 - [x] Добавленое структурное логирование
 - [x] Автоматическая инициализация кнопки "Menu" в интерфейсе Telegram
 
-
 ### Требования
+
 Для сборки проекта на вашем компьютере должны быть установлены **JDK 25** и **Maven 3.9.12+**
 
 Сборка
 Unix-система:
+
 ```
 bash
 ./mvnw clean verify
 ```
 
 Windows:
+
 ```
 bash
 mvnw.cmd clean verify
 ```
 
 Запуск: лучше запускать через IntelliJ IDEA, нажимая на кнопку Run (путь до файла ниже) ```bot/src/main/java/backend/academy/linktracker/bot/BotApplication.java```
-
 

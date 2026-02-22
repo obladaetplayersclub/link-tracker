@@ -1,12 +1,12 @@
 package backend.academy.linktracker.bot.command;
 
-import org.springframework.stereotype.Component;
-import java.util.List;
 import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.model.request.ParseMode;
 import com.pengrad.telegrambot.request.SendMessage;
+import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
 
 @Component
 public class HelpCommand implements Command {
