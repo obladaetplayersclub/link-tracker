@@ -1,10 +1,12 @@
 package backend.academy.linktracker.bot.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import backend.academy.linktracker.bot.command.Command;
+import backend.academy.linktracker.bot.command.UnknownCommand;
 import com.pengrad.telegrambot.model.Chat;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
@@ -29,16 +31,26 @@ class CommandDispatcherTest {
 
     @Test
     void process_ShouldReturnErrorMessage_WhenCommandIsUnknown() {
+
         Long expectedChatId = 666L;
-        when(update.message()).thenReturn(message);
-        when(message.text()).thenReturn("/haiq");
-        when(message.chat()).thenReturn(chat);
-        when(chat.id()).thenReturn(expectedChatId);
+        lenient().when(update.message()).thenReturn(message);
+        lenient().when(message.text()).thenReturn("/haiq");
+        lenient().when(message.chat()).thenReturn(chat);
+        lenient().when(chat.id()).thenReturn(expectedChatId);
+
         Command mockStartCommand = mock(Command.class);
         when(mockStartCommand.command()).thenReturn("/start");
-        CommandDispatcher dispatcher = new CommandDispatcher(List.of(mockStartCommand));
+
+        UnknownCommand mockUnknownCommand = mock(UnknownCommand.class);
+
+        SendMessage expectedErrorResponse = new SendMessage(expectedChatId, "Неизвестная команда! Используйте /help");
+        when(mockUnknownCommand.handle(update)).thenReturn(expectedErrorResponse);
+
+        CommandDispatcher dispatcher = new CommandDispatcher(List.of(mockStartCommand), mockUnknownCommand);
         SendMessage response = dispatcher.process(update);
+
         assertThat(response.getParameters().get("chat_id")).isEqualTo(expectedChatId);
+
         String responseText = response.getParameters().get("text").toString();
         assertThat(responseText).contains("Неизвестная команда").contains("/help");
     }

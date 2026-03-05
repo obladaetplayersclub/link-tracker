@@ -30,15 +30,19 @@ class StartCommandTest {
 
     @Test
     void handle_ShouldReturnWelcomeMessage_WithUserName() {
+
         StartCommand startCommand = new StartCommand();
         Long expectedChatId = 666L;
         String userName = "Konstantin";
+
         when(update.message()).thenReturn(message);
         when(message.chat()).thenReturn(chat);
         when(chat.id()).thenReturn(expectedChatId);
         when(message.from()).thenReturn(user);
         when(user.firstName()).thenReturn(userName);
+
         SendMessage response = startCommand.handle(update);
+
         assertThat(response.getParameters().get("chat_id")).isEqualTo(expectedChatId);
         assertThat(response.getParameters().get("text").toString()).contains("Добро пожаловать, " + userName);
     }

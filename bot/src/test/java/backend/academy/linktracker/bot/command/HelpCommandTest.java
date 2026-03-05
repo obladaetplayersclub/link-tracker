@@ -29,17 +29,23 @@ class HelpCommandTest {
 
     @Test
     void handle_ShouldReturnListOfCommands_WithMarkdown() {
+
         Long expectedChatId = 666L;
+
         when(update.message()).thenReturn(message);
         when(message.chat()).thenReturn(chat);
         when(chat.id()).thenReturn(expectedChatId);
+
         Command mockStartCommand = mock(Command.class);
         when(mockStartCommand.command()).thenReturn("/start");
         when(mockStartCommand.description()).thenReturn("Запуск бота");
+
         HelpCommand helpCommand = new HelpCommand(List.of(mockStartCommand));
         SendMessage response = helpCommand.handle(update);
+
         assertThat(response.getParameters().get("chat_id")).isEqualTo(expectedChatId);
         assertThat(response.getParameters().get("parse_mode")).isEqualTo(ParseMode.Markdown);
+
         String responseText = response.getParameters().get("text").toString();
         assertThat(responseText)
                 .startsWith("В этом боте доступны такие команды:\n")
