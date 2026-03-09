@@ -1,9 +1,9 @@
 package backend.academy.linktracker.scrapper.repository;
 
 public interface ChatRepository {
-    void register(Long chatId);
+    void register(long chatId);
 
-    void delete(Long chatId);
+    void delete(long chatId);
 
-    boolean exists(Long chatId);
+    boolean exists(long chatId);
 }

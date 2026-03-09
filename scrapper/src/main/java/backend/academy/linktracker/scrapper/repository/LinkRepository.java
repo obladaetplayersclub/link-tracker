@@ -8,7 +8,7 @@ import java.util.List;
 public interface LinkRepository {
     Link add(long chatId, Link link);
 
-    void remove(long chatId, URI url);
+    Link remove(long chatId, URI url);
 
     List<Link> findAllByChatId(long chatId);
 

@@ -17,5 +17,8 @@ import org.springframework.validation.annotation.Validated;
 public class GithubProperties {
 
     @NotEmpty
+    private String baseUrl = "https://api.github.com";
+
+    @NotEmpty
     private String token;
 }
