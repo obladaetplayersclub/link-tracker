@@ -1,8 +1,8 @@
 package backend.academy.linktracker.bot.controller;
 
 import com.pengrad.telegrambot.TelegramBot;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatusCode;
@@ -15,13 +15,16 @@ import org.springframework.web.client.RestClient;
 @ActiveProfiles("test")
 class BotUpdatesControllerTest {
 
-    private final RestClient restClient;
+    @LocalServerPort
+    private int port;
+
+    private RestClient restClient;
 
     @MockitoBean
     private TelegramBot telegramBot;
 
-    @Autowired
-    BotUpdatesControllerTest(@LocalServerPort int port) {
+    @BeforeEach
+    void setUp() {
         this.restClient =
                 RestClient.builder().baseUrl("http://localhost:" + port).build();
     }
