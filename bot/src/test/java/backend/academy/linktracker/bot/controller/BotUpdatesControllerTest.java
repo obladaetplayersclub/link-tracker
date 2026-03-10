@@ -1,5 +1,7 @@
 package backend.academy.linktracker.bot.controller;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import com.pengrad.telegrambot.TelegramBot;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,7 +13,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.client.RestClient;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = "app.telegram.url=http://localhost:8080/bot")
 @ActiveProfiles("test")
 class BotUpdatesControllerTest {
 
@@ -47,7 +51,7 @@ class BotUpdatesControllerTest {
                 .body(validJson)
                 .exchange((req, res) -> res.getStatusCode());
 
-        org.junit.jupiter.api.Assertions.assertEquals(200, status.value());
+        assertEquals(200, status.value());
     }
 
     @Test
@@ -68,6 +72,6 @@ class BotUpdatesControllerTest {
                 .body(invalidJson)
                 .exchange((req, res) -> res.getStatusCode());
 
-        org.junit.jupiter.api.Assertions.assertEquals(400, status.value());
+        assertEquals(400, status.value());
     }
 }
