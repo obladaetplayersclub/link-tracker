@@ -34,12 +34,15 @@ public class BotUpdatesListener implements UpdatesListener {
                     Long chatId = update.message().chat().id();
                     MDC.put("chat_id", String.valueOf(chatId));
                     MDC.put("update_id", String.valueOf(update.updateId()));
-                    log.info("Обработка входящего обновления");
+                    if (update.message().text() != null) {
+                        MDC.put("command", update.message().text().split(" ")[0]);
+                    }
+                    log.atInfo().log("Обработка входящего обновления");
                 }
                 SendMessage response = commandDispatcher.process(update);
                 if (response != null) {
                     telegramBot.execute(response);
-                    log.info("Ответ отправлен успешно");
+                    log.atInfo().log("Ответ отправлен успешно");
                 }
             } catch (Exception e) {
                 log.error("Ошибка ", e);

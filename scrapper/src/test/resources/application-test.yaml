@@ -1,4 +1,8 @@
 app:
+  bot:
+    base-url: http://localhost
+  scheduler:
+    interval: PT1H
   github:
     base-url: http://localhost
     token: test-token

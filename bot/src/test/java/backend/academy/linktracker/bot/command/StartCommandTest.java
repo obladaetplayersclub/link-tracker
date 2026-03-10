@@ -3,6 +3,7 @@ package backend.academy.linktracker.bot.command;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import backend.academy.linktracker.bot.client.ScrapperClient;
 import com.pengrad.telegrambot.model.Chat;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
@@ -28,10 +29,13 @@ class StartCommandTest {
     @Mock
     private User user;
 
+    @Mock
+    private ScrapperClient scrapperClient;
+
     @Test
     void handle_ShouldReturnWelcomeMessage_WithUserName() {
 
-        StartCommand startCommand = new StartCommand();
+        StartCommand startCommand = new StartCommand(scrapperClient);
         Long expectedChatId = 666L;
         String userName = "Konstantin";
 

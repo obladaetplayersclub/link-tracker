@@ -8,6 +8,10 @@ spring:
     import: "optional:file:scrapper/.env[.properties]"
 
 app:
+  bot:
+    base-url: http://localhost:8080
+  scheduler:
+    interval: PT30S
   stackoverflow:
     key: ${STACKOVERFLOW_KEY} # Use env variable. DO NOT KEEP TOKEN HERE
     access-token: ${STACKOVERFLOW_ACCESS_KEY} # Use env variable. DO NOT KEEP TOKEN HERE

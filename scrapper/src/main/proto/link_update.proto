@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package linktracker;
+
+option java_package = "backend.academy.linktracker.scrapper.grpc.generated";
+option java_multiple_files = true;
+
+message LinkUpdateRequest {
+    int64 id = 1;
+    string url = 2;
+    string description = 3;
+    repeated int64 tg_chat_ids = 4;
+}
+
+message LinkUpdateResponse {
+}
+
+service LinkUpdateService {
+    rpc SendUpdate(LinkUpdateRequest) returns (LinkUpdateResponse);
+}

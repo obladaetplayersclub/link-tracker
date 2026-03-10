@@ -17,7 +17,7 @@ class ChainLinkParserTest {
         Optional<ParsedLink> result = parser.parse(url);
 
         assertTrue(result.isPresent());
-        assertInstanceOf(GitHubParsedLink.class, result.get());
+        assertInstanceOf(GitHubParsedLink.class, result.orElseThrow());
     }
 
     @Test
@@ -27,7 +27,7 @@ class ChainLinkParserTest {
         Optional<ParsedLink> result = parser.parse(url);
 
         assertTrue(result.isPresent());
-        assertInstanceOf(StackOverflowParsedLink.class, result.get());
+        assertInstanceOf(StackOverflowParsedLink.class, result.orElseThrow());
     }
 
     @Test

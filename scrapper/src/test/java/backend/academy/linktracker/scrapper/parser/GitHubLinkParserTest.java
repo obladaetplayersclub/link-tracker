@@ -18,7 +18,7 @@ class GitHubLinkParserTest {
         Optional<ParsedLink> result = parser.parse(url);
 
         assertTrue(result.isPresent());
-        GitHubParsedLink parsed = assertInstanceOf(GitHubParsedLink.class, result.get());
+        GitHubParsedLink parsed = assertInstanceOf(GitHubParsedLink.class, result.orElseThrow());
         assertEquals("spring-projects", parsed.owner());
         assertEquals("spring-boot", parsed.repo());
     }
@@ -30,7 +30,7 @@ class GitHubLinkParserTest {
         Optional<ParsedLink> result = parser.parse(url);
 
         assertTrue(result.isPresent());
-        GitHubParsedLink parsed = assertInstanceOf(GitHubParsedLink.class, result.get());
+        GitHubParsedLink parsed = assertInstanceOf(GitHubParsedLink.class, result.orElseThrow());
         assertEquals("user", parsed.owner());
         assertEquals("repo", parsed.repo());
     }

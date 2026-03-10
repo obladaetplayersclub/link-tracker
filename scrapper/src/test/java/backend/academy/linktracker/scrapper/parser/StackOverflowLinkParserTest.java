@@ -18,7 +18,7 @@ class StackOverflowLinkParserTest {
         Optional<ParsedLink> result = parser.parse(url);
 
         assertTrue(result.isPresent());
-        StackOverflowParsedLink parsed = assertInstanceOf(StackOverflowParsedLink.class, result.get());
+        StackOverflowParsedLink parsed = assertInstanceOf(StackOverflowParsedLink.class, result.orElseThrow());
         assertEquals(12345L, parsed.questionId());
     }
 

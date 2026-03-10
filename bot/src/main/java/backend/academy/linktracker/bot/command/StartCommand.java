@@ -1,12 +1,17 @@
 package backend.academy.linktracker.bot.command;
 
+import backend.academy.linktracker.bot.client.ScrapperClient;
 import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.model.User;
 import com.pengrad.telegrambot.request.SendMessage;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class StartCommand implements Command {
+    private final ScrapperClient scrapperClient;
+
     @Override
     public String command() {
         return "/start";
@@ -19,9 +24,14 @@ public class StartCommand implements Command {
 
     @Override
     public SendMessage handle(Update update) {
-        Long chatId = update.message().chat().id();
+        long chatId = update.message().chat().id();
         User user = update.message().from();
         String firstName = user.firstName();
+        try {
+            scrapperClient.registerChat(chatId);
+        } catch (Exception ignored) {
+        }
+
         return new SendMessage(chatId, "Добро пожаловать, %s!".formatted(firstName));
     }
 }

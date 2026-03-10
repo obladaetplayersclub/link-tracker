@@ -1,7 +1,9 @@
 package backend.academy.linktracker.scrapper.configuration;
 
+import backend.academy.linktracker.scrapper.client.BotClient;
 import backend.academy.linktracker.scrapper.client.GitHubClient;
 import backend.academy.linktracker.scrapper.client.StackOverflowClient;
+import backend.academy.linktracker.scrapper.properties.BotProperties;
 import backend.academy.linktracker.scrapper.properties.GithubProperties;
 import backend.academy.linktracker.scrapper.properties.StackoverflowProperties;
 import org.springframework.context.annotation.Bean;
@@ -32,5 +34,14 @@ public class ClientConfiguration {
         return HttpServiceProxyFactory.builderFor(RestClientAdapter.create(restClient))
                 .build()
                 .createClient(StackOverflowClient.class);
+    }
+
+    @Bean
+    public BotClient botClient(BotProperties properties) {
+        RestClient restClient =
+                RestClient.builder().baseUrl(properties.getBaseUrl()).build();
+        return HttpServiceProxyFactory.builderFor(RestClientAdapter.create(restClient))
+                .build()
+                .createClient(BotClient.class);
     }
 }
