@@ -15,5 +15,5 @@ import org.springframework.validation.annotation.Validated;
 public class ScrapperProperties {
 
     @NotEmpty
-    private String baseUrl = "http://localhost:8081";
+    private String baseUrl;
 }

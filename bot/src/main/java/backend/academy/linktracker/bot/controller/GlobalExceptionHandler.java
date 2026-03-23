@@ -14,7 +14,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> methodArgumentNotValid(MethodArgumentNotValidException ex) {
         ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
                 "Не корректные параметы запроса",
-                "400",
+                String.valueOf(HttpStatus.BAD_REQUEST.value()),
                 ex.getClass().getSimpleName(),
                 ex.getMessage(),
                 Arrays.stream(ex.getStackTrace())

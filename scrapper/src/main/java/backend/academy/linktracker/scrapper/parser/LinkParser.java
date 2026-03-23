@@ -1,8 +1,12 @@
 package backend.academy.linktracker.scrapper.parser;
 
 import java.net.URI;
-import java.util.Optional;
+import java.time.OffsetDateTime;
 
 public interface LinkParser {
-    Optional<ParsedLink> parse(URI url);
+    boolean supports(URI url);
+
+    ParsedLink parse(URI url);
+
+    OffsetDateTime checkUpdate(URI url);
 }

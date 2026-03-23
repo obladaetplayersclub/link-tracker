@@ -11,10 +11,12 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class StateHandler {
     private final UserStateManager userStateManager;
@@ -32,16 +34,10 @@ public class StateHandler {
     }
 
     private SendMessage handleTrackUrl(long chatId, String text, UserSession session) {
-        URI url;
-        try {
-            url = URI.create(text.trim());
-            if (url.getScheme() == null || url.getHost() == null) {
-                return new SendMessage(chatId, "Некорректная ссылка. Попробуйте ещё раз:");
-            }
-        } catch (IllegalArgumentException e) {
+        URI url = parseUri(text);
+        if (url == null) {
             return new SendMessage(chatId, "Некорректная ссылка. Попробуйте ещё раз:");
         }
-
         session.setTrackUrl(url);
         session.setState(UserState.AWAITING_TRACK_TAGS);
         return new SendMessage(chatId, "Введите теги через запятую или отправьте '-' для пропуска:");
@@ -70,16 +66,10 @@ public class StateHandler {
     }
 
     private SendMessage handleUntrackUrl(long chatId, String text) {
-        URI url;
-        try {
-            url = URI.create(text.trim());
-            if (url.getScheme() == null || url.getHost() == null) {
-                return new SendMessage(chatId, "Некорректная ссылка. Попробуйте ещё раз:");
-            }
-        } catch (IllegalArgumentException e) {
+        URI url = parseUri(text);
+        if (url == null) {
             return new SendMessage(chatId, "Некорректная ссылка. Попробуйте ещё раз:");
         }
-
         try {
             scrapperClient.removeLink(chatId, new RemoveLinkRequest(url));
             userStateManager.resetSession(chatId);
@@ -91,5 +81,17 @@ public class StateHandler {
             userStateManager.resetSession(chatId);
             return new SendMessage(chatId, "Ошибка: " + e.getStatusCode());
         }
+    }
+
+    private URI parseUri(String text) {
+        try {
+            URI url = URI.create(text.trim());
+            if (url.getScheme() != null && url.getHost() != null) {
+                return url;
+            }
+        } catch (IllegalArgumentException e) {
+            log.debug("Невалидный URI: {}", text, e);
+        }
+        return null;
     }
 }

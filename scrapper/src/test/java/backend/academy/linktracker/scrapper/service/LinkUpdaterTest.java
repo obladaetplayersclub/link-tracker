@@ -1,29 +1,19 @@
 package backend.academy.linktracker.scrapper.service;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import backend.academy.linktracker.scrapper.client.BotClient;
-import backend.academy.linktracker.scrapper.client.GitHubClient;
-import backend.academy.linktracker.scrapper.client.StackOverflowClient;
-import backend.academy.linktracker.scrapper.client.dto.GitHubRepoResponse;
-import backend.academy.linktracker.scrapper.client.dto.StackOverflowQuestionResponse;
 import backend.academy.linktracker.scrapper.domain.Link;
 import backend.academy.linktracker.scrapper.dto.LinkUpdate;
-import backend.academy.linktracker.scrapper.parser.ChainLinkParser;
-import backend.academy.linktracker.scrapper.parser.GitHubParsedLink;
-import backend.academy.linktracker.scrapper.parser.StackOverflowParsedLink;
-import backend.academy.linktracker.scrapper.properties.StackoverflowProperties;
+import backend.academy.linktracker.scrapper.parser.LinkParser;
 import backend.academy.linktracker.scrapper.repository.LinkRepository;
 import java.net.URI;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,18 +29,13 @@ class LinkUpdaterTest {
     private LinkRepository linkRepository;
 
     @Mock
-    private ChainLinkParser linkParser;
+    private LinkParser gitHubParser;
 
     @Mock
-    private GitHubClient gitHubClient;
-
-    @Mock
-    private StackOverflowClient stackOverflowClient;
+    private LinkParser stackOverflowParser;
 
     @Mock
     private BotClient botClient;
-
-    private StackoverflowProperties stackoverflowProperties;
 
     private LinkUpdater linkUpdater;
 
@@ -59,11 +44,7 @@ class LinkUpdaterTest {
 
     @BeforeEach
     void setUp() {
-        stackoverflowProperties = new StackoverflowProperties();
-        stackoverflowProperties.setKey("test-key");
-        stackoverflowProperties.setAccessToken("test-token");
-        linkUpdater = new LinkUpdater(
-                linkRepository, linkParser, gitHubClient, stackOverflowClient, stackoverflowProperties, botClient);
+        linkUpdater = new LinkUpdater(linkRepository, List.of(gitHubParser, stackOverflowParser), botClient);
     }
 
     @Test
@@ -73,8 +54,8 @@ class LinkUpdaterTest {
 
         Link link = new Link(1L, GITHUB_URL, List.of(), oldTime);
         when(linkRepository.findAll()).thenReturn(List.of(link));
-        when(linkParser.parse(GITHUB_URL)).thenReturn(Optional.of(new GitHubParsedLink("user", "repo")));
-        when(gitHubClient.getRepository("user", "repo")).thenReturn(new GitHubRepoResponse(newTime, newTime));
+        when(gitHubParser.supports(GITHUB_URL)).thenReturn(true);
+        when(gitHubParser.checkUpdate(GITHUB_URL)).thenReturn(newTime);
         when(linkRepository.findChatIdsByUrl(GITHUB_URL)).thenReturn(List.of(100L, 200L));
 
         linkUpdater.update();
@@ -93,8 +74,8 @@ class LinkUpdaterTest {
 
         Link link = new Link(1L, GITHUB_URL, List.of(), sameTime);
         when(linkRepository.findAll()).thenReturn(List.of(link));
-        when(linkParser.parse(GITHUB_URL)).thenReturn(Optional.of(new GitHubParsedLink("user", "repo")));
-        when(gitHubClient.getRepository("user", "repo")).thenReturn(new GitHubRepoResponse(sameTime, sameTime));
+        when(gitHubParser.supports(GITHUB_URL)).thenReturn(true);
+        when(gitHubParser.checkUpdate(GITHUB_URL)).thenReturn(sameTime);
 
         linkUpdater.update();
 
@@ -105,8 +86,8 @@ class LinkUpdaterTest {
     void update_ShouldNotCrash_WhenGitHubClientThrowsException() {
         Link link = new Link(1L, GITHUB_URL, List.of(), null);
         when(linkRepository.findAll()).thenReturn(List.of(link));
-        when(linkParser.parse(GITHUB_URL)).thenReturn(Optional.of(new GitHubParsedLink("user", "repo")));
-        when(gitHubClient.getRepository("user", "repo")).thenThrow(new RestClientException("API error"));
+        when(gitHubParser.supports(GITHUB_URL)).thenReturn(true);
+        when(gitHubParser.checkUpdate(GITHUB_URL)).thenThrow(new RestClientException("API error"));
 
         linkUpdater.update();
 
@@ -117,9 +98,8 @@ class LinkUpdaterTest {
     void update_ShouldNotCrash_WhenStackOverflowClientThrowsException() {
         Link link = new Link(1L, SO_URL, List.of(), null);
         when(linkRepository.findAll()).thenReturn(List.of(link));
-        when(linkParser.parse(SO_URL)).thenReturn(Optional.of(new StackOverflowParsedLink(12345L)));
-        when(stackOverflowClient.getQuestion(anyLong(), anyString(), anyString(), anyString()))
-                .thenThrow(new RestClientException("SO API error"));
+        when(stackOverflowParser.supports(SO_URL)).thenReturn(true);
+        when(stackOverflowParser.checkUpdate(SO_URL)).thenThrow(new RestClientException("SO API error"));
 
         linkUpdater.update();
 
@@ -127,12 +107,11 @@ class LinkUpdaterTest {
     }
 
     @Test
-    void update_ShouldNotNotify_WhenStackOverflowReturnsEmptyItems() {
+    void update_ShouldNotNotify_WhenCheckUpdateReturnsNull() {
         Link link = new Link(1L, SO_URL, List.of(), null);
         when(linkRepository.findAll()).thenReturn(List.of(link));
-        when(linkParser.parse(SO_URL)).thenReturn(Optional.of(new StackOverflowParsedLink(12345L)));
-        when(stackOverflowClient.getQuestion(anyLong(), anyString(), anyString(), anyString()))
-                .thenReturn(new StackOverflowQuestionResponse(List.of()));
+        when(stackOverflowParser.supports(SO_URL)).thenReturn(true);
+        when(stackOverflowParser.checkUpdate(SO_URL)).thenReturn(null);
 
         linkUpdater.update();
 
@@ -140,11 +119,12 @@ class LinkUpdaterTest {
     }
 
     @Test
-    void update_ShouldSkipLink_WhenParserReturnsEmpty() {
+    void update_ShouldSkipLink_WhenNoParserSupports() {
         URI unsupportedUrl = URI.create("https://example.com/something");
         Link link = new Link(1L, unsupportedUrl, List.of(), null);
         when(linkRepository.findAll()).thenReturn(List.of(link));
-        when(linkParser.parse(unsupportedUrl)).thenReturn(Optional.empty());
+        when(gitHubParser.supports(unsupportedUrl)).thenReturn(false);
+        when(stackOverflowParser.supports(unsupportedUrl)).thenReturn(false);
 
         linkUpdater.update();
 
@@ -162,12 +142,12 @@ class LinkUpdaterTest {
 
         when(linkRepository.findAll()).thenReturn(List.of(updatedLink, notUpdatedLink));
 
-        when(linkParser.parse(GITHUB_URL)).thenReturn(Optional.of(new GitHubParsedLink("user", "repo")));
-        when(gitHubClient.getRepository("user", "repo")).thenReturn(new GitHubRepoResponse(newTime, newTime));
+        when(gitHubParser.supports(GITHUB_URL)).thenReturn(true);
+        when(gitHubParser.checkUpdate(GITHUB_URL)).thenReturn(newTime);
         when(linkRepository.findChatIdsByUrl(GITHUB_URL)).thenReturn(List.of(100L));
 
-        when(linkParser.parse(otherUrl)).thenReturn(Optional.of(new GitHubParsedLink("other", "repo")));
-        when(gitHubClient.getRepository("other", "repo")).thenReturn(new GitHubRepoResponse(newTime, newTime));
+        when(gitHubParser.supports(otherUrl)).thenReturn(true);
+        when(gitHubParser.checkUpdate(otherUrl)).thenReturn(newTime);
 
         linkUpdater.update();
 

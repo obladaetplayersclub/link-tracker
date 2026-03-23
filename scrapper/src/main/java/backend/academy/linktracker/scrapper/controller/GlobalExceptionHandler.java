@@ -5,6 +5,7 @@ import backend.academy.linktracker.scrapper.exception.ChatAlreadyExistsException
 import backend.academy.linktracker.scrapper.exception.ChatNotFoundException;
 import backend.academy.linktracker.scrapper.exception.LinkAlreadyTrackedException;
 import backend.academy.linktracker.scrapper.exception.LinkNotFoundException;
+import backend.academy.linktracker.scrapper.exception.UnsupportedLinkException;
 import java.util.Arrays;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +19,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> chatAlreadyExists(ChatAlreadyExistsException ex) {
         ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
                 "Чат уже существует",
-                "409",
+                String.valueOf(HttpStatus.CONFLICT.value()),
                 ex.getClass().getSimpleName(),
                 ex.getMessage(),
                 Arrays.stream(ex.getStackTrace())
@@ -31,7 +32,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> chatNotFound(ChatNotFoundException ex) {
         ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
                 "Чат не найден",
-                "404",
+                String.valueOf(HttpStatus.NOT_FOUND.value()),
                 ex.getClass().getSimpleName(),
                 ex.getMessage(),
                 Arrays.stream(ex.getStackTrace())
@@ -44,7 +45,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> linkNotFound(LinkNotFoundException ex) {
         ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
                 "Ссылка не найдена",
-                "404",
+                String.valueOf(HttpStatus.NOT_FOUND.value()),
                 ex.getClass().getSimpleName(),
                 ex.getMessage(),
                 Arrays.stream(ex.getStackTrace())
@@ -57,7 +58,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> linkAlreadyTracked(LinkAlreadyTrackedException ex) {
         ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
                 "Ссылка уже отслеживается",
-                "409",
+                String.valueOf(HttpStatus.CONFLICT.value()),
                 ex.getClass().getSimpleName(),
                 ex.getMessage(),
                 Arrays.stream(ex.getStackTrace())
@@ -66,11 +67,24 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(apiErrorResponse, HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(UnsupportedLinkException.class)
+    public ResponseEntity<ApiErrorResponse> unsupportedLink(UnsupportedLinkException ex) {
+        ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
+                "Ссылка не может быть обработана нашем парсером",
+                String.valueOf(HttpStatus.BAD_REQUEST.value()),
+                ex.getClass().getSimpleName(),
+                ex.getMessage(),
+                Arrays.stream(ex.getStackTrace())
+                        .map(StackTraceElement::toString)
+                        .toList());
+        return new ResponseEntity<>(apiErrorResponse, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> validationError(MethodArgumentNotValidException ex) {
         ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
                 "Некорректные параметры запроса",
-                "400",
+                String.valueOf(HttpStatus.BAD_REQUEST.value()),
                 ex.getClass().getSimpleName(),
                 ex.getMessage(),
                 Arrays.stream(ex.getStackTrace())
