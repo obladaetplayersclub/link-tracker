@@ -9,11 +9,11 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.Setter;
 import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "links")
@@ -32,17 +32,15 @@ public class LinkEntity {
 
     @ManyToMany
     @JoinTable(
-        name = "chat_links",
-        joinColumns = @JoinColumn(name = "link_id"),
-        inverseJoinColumns = @JoinColumn(name = "chat_id")
-    )
+            name = "chat_links",
+            joinColumns = @JoinColumn(name = "link_id"),
+            inverseJoinColumns = @JoinColumn(name = "chat_id"))
     private Set<ChatEntity> chats = new HashSet<>();
 
     @ManyToMany
     @JoinTable(
-        name = "link_tags",
-        joinColumns = @JoinColumn(name = "link_id"),
-        inverseJoinColumns = @JoinColumn(name = "tag_id")
-    )
+            name = "link_tags",
+            joinColumns = @JoinColumn(name = "link_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id"))
     private Set<TagEntity> tags = new HashSet<>();
 }

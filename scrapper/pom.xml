@@ -90,8 +90,7 @@
             <artifactId>liquibase-core</artifactId>
         </dependency>
 
-
-    <!-- Opentelemetry support: -->
+        <!-- Opentelemetry support: -->
         <!-- <dependency> -->
         <!--     <groupId>org.springframework.boot</groupId> -->
         <!--     <artifactId>spring-boot-starter-opentelemetry</artifactId> -->
