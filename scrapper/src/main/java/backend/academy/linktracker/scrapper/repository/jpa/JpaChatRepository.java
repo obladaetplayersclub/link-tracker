@@ -2,6 +2,7 @@ package backend.academy.linktracker.scrapper.repository.jpa;
 
 import backend.academy.linktracker.scrapper.entity.ChatEntity;
 import backend.academy.linktracker.scrapper.repository.ChatRepository;
+import jakarta.transaction.Transactional;
 import java.util.Optional;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,6 +17,7 @@ public interface JpaChatRepository extends JpaRepository<ChatEntity, Long>, Chat
 
     @Override
     @Modifying
+    @Transactional
     @Query("DELETE FROM ChatEntity c WHERE c.chatId = :chatId")
     void delete(@Param("chatId") long chatId);
 
