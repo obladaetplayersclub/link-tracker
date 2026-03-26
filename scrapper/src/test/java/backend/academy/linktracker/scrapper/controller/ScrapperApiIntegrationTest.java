@@ -9,13 +9,14 @@ import backend.academy.linktracker.scrapper.dto.ListLinksResponse;
 import backend.academy.linktracker.scrapper.dto.RemoveLinkRequest;
 import java.net.URI;
 import java.util.List;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
-import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -26,7 +27,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class ScrapperApiIntegrationTest {
 
     static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:17");
@@ -43,14 +43,21 @@ class ScrapperApiIntegrationTest {
     }
 
     private final RestClient restClient;
+    private final JdbcTemplate jdbcTemplate;
 
     private static final URI TEST_URL = URI.create("https://github.com/user/repo");
     private static final List<String> TEST_TAGS = List.of("work", "java");
 
     @Autowired
-    ScrapperApiIntegrationTest(@LocalServerPort int port) {
+    ScrapperApiIntegrationTest(@LocalServerPort int port, JdbcTemplate jdbcTemplate) {
         this.restClient =
                 RestClient.builder().baseUrl("http://localhost:" + port).build();
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
+    @AfterEach
+    void cleanUp() {
+        jdbcTemplate.update("TRUNCATE chats, links RESTART IDENTITY CASCADE");
     }
 
     @Test
