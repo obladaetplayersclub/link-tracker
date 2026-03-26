@@ -1,7 +1,7 @@
 --liquibase formatted sql
 
---changeset author:konstantin:create-table-chats
-CREATE TABLE chats (
+--changeset konstantin:create-table-chats
+CREATE TABLE IF NOT EXISTS chats (
     id BIGSERIAL PRIMARY KEY,
     chat_id BIGINT NOT NULL UNIQUE
 );

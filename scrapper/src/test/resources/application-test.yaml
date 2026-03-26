@@ -1,4 +1,12 @@
+spring:
+  liquibase:
+    change-log: classpath:migrations/master.xml
+  jpa:
+    hibernate:
+      ddl-auto: none
+
 app:
+  database-access-type: SQL
   bot:
     base-url: http://localhost
   scheduler:

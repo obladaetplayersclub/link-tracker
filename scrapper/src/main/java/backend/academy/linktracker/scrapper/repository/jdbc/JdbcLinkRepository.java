@@ -4,19 +4,16 @@ import backend.academy.linktracker.scrapper.domain.Link;
 import backend.academy.linktracker.scrapper.repository.LinkRepository;
 import jakarta.transaction.Transactional;
 import java.net.URI;
-import java.sql.PreparedStatement;
 import java.time.OffsetDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-@ConditionalOnProperty(prefix = "app.database-access-type", havingValue = "SQL")
+@ConditionalOnProperty(name = "app.database-access-type", havingValue = "SQL")
 public class JdbcLinkRepository implements LinkRepository {
     private final JdbcTemplate jdbcTemplate;
 
@@ -32,20 +29,17 @@ public class JdbcLinkRepository implements LinkRepository {
     @Override
     @Transactional
     public Link add(long chatId, Link link) {
-        Long linkId = jdbcTemplate.queryForObject(
+        List<Long> existingIds = jdbcTemplate.queryForList(
                 "SELECT id FROM links WHERE url = ?", Long.class, link.getUrl().toString());
 
-        if (linkId == null) {
-            KeyHolder keyHolder = new GeneratedKeyHolder();
-            jdbcTemplate.update(
-                    con -> {
-                        PreparedStatement ps = con.prepareStatement(
-                                "INSERT INTO links (url, last_updated) VALUES (?, NOW())", new String[] {"id"});
-                        ps.setString(1, link.getUrl().toString());
-                        return ps;
-                    },
-                    keyHolder);
-            linkId = keyHolder.getKey().longValue();
+        Long linkId;
+        if (existingIds.isEmpty()) {
+            linkId = jdbcTemplate.queryForObject(
+                    "INSERT INTO links (url, last_updated) VALUES (?, NOW()) RETURNING id",
+                    Long.class,
+                    link.getUrl().toString());
+        } else {
+            linkId = existingIds.getFirst();
         }
 
         Long chatPk = jdbcTemplate.queryForObject("SELECT id FROM chats WHERE chat_id = ?", Long.class, chatId);

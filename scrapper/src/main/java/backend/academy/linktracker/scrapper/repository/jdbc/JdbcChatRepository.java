@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-@ConditionalOnProperty(prefix = "app.database-access-type", havingValue = "SQL")
+@ConditionalOnProperty(name = "app.database-access-type", havingValue = "SQL")
 public class JdbcChatRepository implements ChatRepository {
     private final JdbcTemplate jdbcTemplate;
 

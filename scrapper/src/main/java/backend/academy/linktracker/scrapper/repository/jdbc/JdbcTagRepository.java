@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-@ConditionalOnProperty(prefix = "app.database-access-type", havingValue = "SQL")
+@ConditionalOnProperty(name = "app.database-access-type", havingValue = "SQL")
 public class JdbcTagRepository implements TagRepository {
     private final JdbcTemplate jdbcTemplate;
 
