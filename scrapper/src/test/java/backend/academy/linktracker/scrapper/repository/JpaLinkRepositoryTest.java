@@ -5,4 +5,4 @@ import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest
 @TestPropertySource(properties = "app.database-access-type=ORM")
-public class JpaRepositoryTest extends AbstractRepositoryTest {}
+public class JpaLinkRepositoryTest extends AbstractLinkRepositoryTest {}
