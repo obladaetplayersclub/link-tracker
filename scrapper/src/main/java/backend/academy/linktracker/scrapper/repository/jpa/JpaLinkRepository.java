@@ -12,6 +12,7 @@ import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -128,5 +129,13 @@ public class JpaLinkRepository implements LinkRepository {
     private Link toLink(LinkEntity entity) {
         List<String> tags = entity.getTags().stream().map(TagEntity::getName).collect(Collectors.toList());
         return new Link(entity.getId(), URI.create(entity.getUrl()), tags, entity.getLastUpdated());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Link> findOldest(int limit) {
+        return linkEntityRepository.findAllByOrderByLastUpdatedAsc(Pageable.ofSize(limit)).stream()
+                .map(this::toLink)
+                .toList();
     }
 }

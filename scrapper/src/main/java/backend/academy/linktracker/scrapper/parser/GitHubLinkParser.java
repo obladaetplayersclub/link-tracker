@@ -1,15 +1,18 @@
 package backend.academy.linktracker.scrapper.parser;
 
 import backend.academy.linktracker.scrapper.client.GitHubClient;
-import backend.academy.linktracker.scrapper.client.dto.GitHubRepoResponse;
+import backend.academy.linktracker.scrapper.client.dto.GitHubIssueResponse;
 import java.net.URI;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
 public class GitHubLinkParser implements LinkParser {
+    private static final int PREVIEW_MAX_LENGTH = 200;
     private final GitHubClient gitHubClient;
 
     @Override
@@ -27,9 +30,23 @@ public class GitHubLinkParser implements LinkParser {
     }
 
     @Override
-    public OffsetDateTime checkUpdate(URI url) {
+    public List<LinkUpdateInfo> checkUpdates(URI url, OffsetDateTime since) {
         GitHubParsedLink gh = (GitHubParsedLink) parse(url);
-        GitHubRepoResponse response = gitHubClient.getRepository(gh.owner(), gh.repo());
-        return response.pushedAt();
+        List<GitHubIssueResponse> issues = gitHubClient.getIssues(gh.owner(), gh.repo(), since.toString());
+
+        List<LinkUpdateInfo> updates = new ArrayList<>();
+        for (GitHubIssueResponse issue : issues) {
+            String type = issue.pullRequest() != null ? "PR" : "Issue";
+            String title = type + ": " + issue.title();
+            String author = issue.user() != null ? issue.user().login() : "unknown";
+            String preview = truncate(issue.body());
+            updates.add(new LinkUpdateInfo(title, author, issue.createdAt(), preview));
+        }
+        return updates;
+    }
+
+    private String truncate(String text) {
+        if (text == null) return "";
+        return text.length() <= PREVIEW_MAX_LENGTH ? text : text.substring(0, PREVIEW_MAX_LENGTH);
     }
 }

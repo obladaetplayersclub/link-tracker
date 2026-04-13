@@ -138,4 +138,18 @@ public class JdbcLinkRepository implements LinkRepository {
                 String.class,
                 linkId);
     }
+
+    @Override
+    public List<Link> findOldest(int limit) {
+        return jdbcTemplate.query(
+                "SELECT id, url, last_updated FROM links ORDER BY last_updated ASC LIMIT ?",
+                (rs, rowNum) -> {
+                    long id = rs.getLong("id");
+                    URI linkUrl = URI.create(rs.getString("url"));
+                    OffsetDateTime lastUpd = rs.getObject("last_updated", OffsetDateTime.class);
+                    List<String> tags = findTagsByLinkId(id);
+                    return new Link(id, linkUrl, tags, lastUpd);
+                },
+                limit);
+    }
 }

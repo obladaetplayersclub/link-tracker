@@ -19,4 +19,6 @@ public interface LinkRepository {
     boolean existsByUrl(long chatId, URI url);
 
     void updateLastUpdated(URI url, OffsetDateTime time);
+
+    List<Link> findOldest(int limit);
 }

@@ -1,18 +1,22 @@
 package backend.academy.linktracker.scrapper.parser;
 
 import backend.academy.linktracker.scrapper.client.StackOverflowClient;
-import backend.academy.linktracker.scrapper.client.dto.StackOverflowQuestionResponse;
+import backend.academy.linktracker.scrapper.client.dto.StackOverflowAnswer;
+import backend.academy.linktracker.scrapper.client.dto.StackOverflowAnswerResponse;
 import backend.academy.linktracker.scrapper.properties.StackoverflowProperties;
 import java.net.URI;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
 public class StackOverflowLinkParser implements LinkParser {
+    private static final int PREVIEW_MAX_LENGTH = 200;
     private final StackOverflowClient stackOverflowClient;
     private final StackoverflowProperties stackoverflowProperties;
 
@@ -32,17 +36,44 @@ public class StackOverflowLinkParser implements LinkParser {
     }
 
     @Override
-    public OffsetDateTime checkUpdate(URI url) {
+    public List<LinkUpdateInfo> checkUpdates(URI url, OffsetDateTime since) {
         StackOverflowParsedLink parsed = (StackOverflowParsedLink) parse(url);
-        StackOverflowQuestionResponse response = stackOverflowClient.getQuestion(
-                parsed.questionId(),
-                "stackoverflow",
-                stackoverflowProperties.getKey(),
-                stackoverflowProperties.getAccessToken());
-        if (response.items() == null || response.items().isEmpty()) {
-            return null;
+        long fromdate = since.toEpochSecond();
+        String site = "stackoverflow";
+        String key = stackoverflowProperties.getKey();
+        String token = stackoverflowProperties.getAccessToken();
+
+        List<LinkUpdateInfo> updates = new ArrayList<>();
+
+        StackOverflowAnswerResponse answers =
+                stackOverflowClient.getAnswers(parsed.questionId(), site, key, token, fromdate);
+        if (answers != null && answers.items() != null) {
+            for (StackOverflowAnswer answer : answers.items()) {
+                String author = answer.owner() != null ? answer.owner().displayName() : "unknown";
+                OffsetDateTime created = toOffsetDateTime(answer.creationDate());
+                updates.add(new LinkUpdateInfo("Новый ответ", author, created, truncate(answer.body())));
+            }
         }
-        long epoch = response.items().getFirst().lastActivityDate();
+
+        StackOverflowAnswerResponse comments =
+                stackOverflowClient.getComments(parsed.questionId(), site, key, token, fromdate);
+        if (comments != null && comments.items() != null) {
+            for (StackOverflowAnswer comment : comments.items()) {
+                String author = comment.owner() != null ? comment.owner().displayName() : "unknown";
+                OffsetDateTime created = toOffsetDateTime(comment.creationDate());
+                updates.add(new LinkUpdateInfo("Новый комментарий", author, created, truncate(comment.body())));
+            }
+        }
+
+        return updates;
+    }
+
+    private OffsetDateTime toOffsetDateTime(long epoch) {
         return OffsetDateTime.ofInstant(Instant.ofEpochSecond(epoch), ZoneOffset.UTC);
+    }
+
+    private String truncate(String text) {
+        if (text == null) return "";
+        return text.length() <= PREVIEW_MAX_LENGTH ? text : text.substring(0, PREVIEW_MAX_LENGTH);
     }
 }
