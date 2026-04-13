@@ -78,7 +78,7 @@ public class LinkUpdater {
         List<Long> chatIds = linkRepository.findChatIdsByUrl(link.getUrl());
         for (LinkUpdateInfo info : updates) {
             String description = String.format(
-                    "%s\nАвтор: %s\nВремя: %s\n%s", info.title(), info.author(), info.createdAt(), info.preview());
+                    "%s%nАвтор: %s%nВремя: %s%n%s", info.title(), info.author(), info.createdAt(), info.preview());
             log.atInfo()
                     .addKeyValue("link_url", link.getUrl())
                     .addKeyValue("update_title", info.title())

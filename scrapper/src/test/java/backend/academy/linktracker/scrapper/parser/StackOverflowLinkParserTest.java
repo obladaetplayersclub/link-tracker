@@ -41,6 +41,9 @@ class StackOverflowLinkParserTest {
     @BeforeEach
     void setUp() {
         parser = new StackOverflowLinkParser(stackOverflowClient, stackoverflowProperties);
+    }
+
+    private void setupProperties() {
         when(stackoverflowProperties.getKey()).thenReturn("test-key");
         when(stackoverflowProperties.getAccessToken()).thenReturn("test-token");
     }
@@ -81,6 +84,7 @@ class StackOverflowLinkParserTest {
 
     @Test
     void checkUpdates_shouldReturnAnswerInfo_whenNewAnswerFound() {
+        setupProperties();
         URI url = URI.create("https://stackoverflow.com/questions/12345/title");
         long creationEpoch = 1717200000L;
 
@@ -100,6 +104,7 @@ class StackOverflowLinkParserTest {
 
     @Test
     void checkUpdates_shouldReturnCommentInfo_whenNewCommentFound() {
+        setupProperties();
         URI url = URI.create("https://stackoverflow.com/questions/12345/title");
         long creationEpoch = 1717200000L;
 
@@ -119,6 +124,7 @@ class StackOverflowLinkParserTest {
 
     @Test
     void checkUpdates_shouldReturnBothAnswersAndComments() {
+        setupProperties();
         URI url = URI.create("https://stackoverflow.com/questions/12345/title");
         long epoch = 1717200000L;
 
@@ -138,6 +144,7 @@ class StackOverflowLinkParserTest {
 
     @Test
     void checkUpdates_shouldTruncatePreview_whenBodyExceeds200Chars() {
+        setupProperties();
         URI url = URI.create("https://stackoverflow.com/questions/12345/title");
         String longBody = "B".repeat(300);
 
@@ -154,6 +161,7 @@ class StackOverflowLinkParserTest {
 
     @Test
     void checkUpdates_shouldReturnEmptyList_whenNoUpdates() {
+        setupProperties();
         URI url = URI.create("https://stackoverflow.com/questions/12345/title");
 
         when(stackOverflowClient.getAnswers(eq(12345L), anyString(), anyString(), anyString(), anyLong()))
@@ -168,6 +176,7 @@ class StackOverflowLinkParserTest {
 
     @Test
     void checkUpdates_shouldHandleNullBody() {
+        setupProperties();
         URI url = URI.create("https://stackoverflow.com/questions/12345/title");
 
         when(stackOverflowClient.getAnswers(eq(12345L), anyString(), anyString(), anyString(), anyLong()))
