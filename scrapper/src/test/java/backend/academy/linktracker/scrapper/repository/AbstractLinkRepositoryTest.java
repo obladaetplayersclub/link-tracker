@@ -7,7 +7,7 @@ import java.net.URI;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-public abstract class AbstractLinkRepositoryTest extends AbstractRepositoryTest {
+public abstract class AbstractLinkRepositoryTest extends ComponentTest {
 
     @Test
     void addLink_shouldSaveLink() {

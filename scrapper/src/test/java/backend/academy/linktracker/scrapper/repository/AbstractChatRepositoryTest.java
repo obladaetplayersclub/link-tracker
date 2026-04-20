@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-public abstract class AbstractChatRepositoryTest extends AbstractRepositoryTest {
+public abstract class AbstractChatRepositoryTest extends ComponentTest {
 
     @Test
     void registerChat_shouldSaveChat() {

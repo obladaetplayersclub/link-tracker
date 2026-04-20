@@ -7,7 +7,7 @@ import java.net.URI;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-public abstract class AbstractTagRepositoryTest extends AbstractRepositoryTest {
+public abstract class AbstractTagRepositoryTest extends ComponentTest {
 
     @Test
     void addTag_shouldSaveTag() {
