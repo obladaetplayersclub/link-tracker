@@ -1,6 +1,7 @@
 package backend.academy.linktracker.bot;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
@@ -12,20 +13,27 @@ import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import backend.academy.linktracker.bot.properties.TelegramProperties;
+import backend.academy.linktracker.bot.service.CommandDispatcher;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
+import com.pengrad.telegrambot.model.Chat;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.model.User;
 import com.pengrad.telegrambot.request.GetUpdates;
+import com.pengrad.telegrambot.request.SendMessage;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import org.assertj.core.api.WithAssertions;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -46,6 +54,9 @@ class TelegramBotIntegrationTest implements WithAssertions {
 
     @Autowired
     TelegramProperties telegramProperties;
+
+    @Autowired
+    private CommandDispatcher dispatcher;
 
     @AfterEach
     void clearUpdatesListener() {
@@ -142,5 +153,39 @@ class TelegramBotIntegrationTest implements WithAssertions {
 
         verify(postRequestedFor(urlPathTemplate("/bot{token}/getUpdates"))
                 .withPathParam("token", equalTo(telegramProperties.getToken())));
+    }
+
+    @Test
+    void helpCommand_ShouldReturnCommandListFromWireMock() {
+        Long chatId = 777L;
+        String helpRequestText = "/help";
+
+        String expectedPart = "В этом боте доступны такие команды";
+
+        Update update = mock(Update.class);
+        Message message = mock(Message.class);
+        Chat chat = mock(Chat.class);
+        when(update.message()).thenReturn(message);
+        when(message.text()).thenReturn(helpRequestText);
+        when(message.chat()).thenReturn(chat);
+        when(chat.id()).thenReturn(chatId);
+
+        stubFor(post(urlMatching("/bot[^/]+/sendMessage"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"ok\":true}")));
+
+        SendMessage sendMessageRequest = dispatcher.process(update);
+        telegramBot.execute(sendMessageRequest);
+
+        verify(postRequestedFor(urlMatching("/bot[^/]+/sendMessage"))
+                .withRequestBody(containing("chat_id=" + chatId))
+                .withRequestBody(containing("parse_mode=Markdown")));
+    }
+
+    @BeforeEach
+    void resetWireMock() {
+        WireMock.resetAllRequests();
     }
 }

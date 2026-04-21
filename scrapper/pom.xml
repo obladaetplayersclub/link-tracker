@@ -72,6 +72,23 @@
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-liquibase</artifactId>
+        </dependency>
 
         <!-- Opentelemetry support: -->
         <!-- <dependency> -->
@@ -84,14 +101,14 @@
         <!-- </dependency> -->
 
         <!-- gRPC: -->
-        <!-- <dependency>-->
-        <!--     <groupId>org.springframework.grpc</groupId> -->
-        <!--     <artifactId>spring-grpc-spring-boot-starter</artifactId> -->
-        <!-- </dependency> -->
-        <!-- <dependency> -->
-        <!--     <groupId>io.grpc</groupId> -->
-        <!--     <artifactId>grpc-services</artifactId> -->
-        <!-- </dependency> -->
+        <dependency>
+            <groupId>org.springframework.grpc</groupId>
+            <artifactId>spring-grpc-spring-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-services</artifactId>
+        </dependency>
 
         <!-- GraphQL: -->
         <!-- <dependency> -->
@@ -192,17 +209,17 @@
     <build>
         <plugins>
             <!-- .proto gRPC compilation: -->
-            <!-- <plugin> -->
-            <!--     <groupId>io.github.ascopes</groupId> -->
-            <!--     <artifactId>protobuf-maven-plugin</artifactId> -->
-            <!--     <executions> -->
-            <!--         <execution> -->
-            <!--             <goals> -->
-            <!--                 <goal>generate</goal> -->
-            <!--             </goals> -->
-            <!--         </execution> -->
-            <!--     </executions> -->
-            <!-- </plugin> -->
+            <plugin>
+                <groupId>io.github.ascopes</groupId>
+                <artifactId>protobuf-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <!-- To build OCI image: https://docs.spring.io/spring-boot/maven-plugin/build-image.html -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>

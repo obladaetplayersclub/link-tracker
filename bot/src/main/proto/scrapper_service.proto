@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package linktracker;
+
+option java_package = "backend.academy.linktracker.bot.grpc.generated";
+option java_multiple_files = true;
+
+message ChatRequest {
+    int64 id = 1;
+}
+
+message ChatResponse {
+}
+
+message LinksRequest {
+    int64 tg_chat_id = 1;
+}
+
+message AddLinkRequest {
+    int64 tg_chat_id = 1;
+    string link = 2;
+    repeated string tags = 3;
+}
+
+message RemoveLinkRequest {
+    int64 tg_chat_id = 1;
+    string link = 2;
+}
+
+message LinkResponse {
+    int64 id = 1;
+    string url = 2;
+    repeated string tags = 3;
+}
+
+message ListLinksResponse {
+    repeated LinkResponse links = 1;
+    int32 size = 2;
+}
+
+service TgChatService {
+    rpc RegisterChat(ChatRequest) returns (ChatResponse);
+    rpc DeleteChat(ChatRequest) returns (ChatResponse);
+}
+
+service LinksService {
+    rpc GetLinks(LinksRequest) returns (ListLinksResponse);
+    rpc AddLink(AddLinkRequest) returns (LinkResponse);
+    rpc RemoveLink(RemoveLinkRequest) returns (LinkResponse);
+}

@@ -2,6 +2,7 @@
 *.jar
 *.war
 *.ear
+**/.env
 
 ### Maven ###
 target/
