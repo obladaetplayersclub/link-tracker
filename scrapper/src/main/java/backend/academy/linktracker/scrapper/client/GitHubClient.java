@@ -1,7 +1,6 @@
 package backend.academy.linktracker.scrapper.client;
 
-import backend.academy.linktracker.scrapper.client.dto.GitHubIssueResponse;
-import backend.academy.linktracker.scrapper.client.dto.GitHubRepoResponse;
+import backend.academy.linktracker.scrapper.client.dto.GitHub.GitHubRepoResponse;
 import java.util.List;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.service.annotation.GetExchange;
@@ -14,6 +13,6 @@ public interface GitHubClient {
     GitHubRepoResponse getRepository(@PathVariable("owner") String owner, @PathVariable("repo") String repo);
 
     @GetExchange("/repos/{owner}/{repo}/issues?state=all&since={since}")
-    List<GitHubIssueResponse> getIssues(
+    List<GitHubRepoResponse.GitHubIssueResponse> getIssues(
             @PathVariable String owner, @PathVariable String repo, @PathVariable String since);
 }

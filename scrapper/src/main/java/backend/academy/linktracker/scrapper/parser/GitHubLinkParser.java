@@ -1,7 +1,7 @@
 package backend.academy.linktracker.scrapper.parser;
 
 import backend.academy.linktracker.scrapper.client.GitHubClient;
-import backend.academy.linktracker.scrapper.client.dto.GitHubIssueResponse;
+import backend.academy.linktracker.scrapper.client.dto.GitHub.GitHubRepoResponse;
 import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -32,10 +32,11 @@ public class GitHubLinkParser implements LinkParser {
     @Override
     public List<LinkUpdateInfo> checkUpdates(URI url, OffsetDateTime since) {
         GitHubParsedLink gh = (GitHubParsedLink) parse(url);
-        List<GitHubIssueResponse> issues = gitHubClient.getIssues(gh.owner(), gh.repo(), since.toString());
+        List<GitHubRepoResponse.GitHubIssueResponse> issues =
+                gitHubClient.getIssues(gh.owner(), gh.repo(), since.toString());
 
         List<LinkUpdateInfo> updates = new ArrayList<>();
-        for (GitHubIssueResponse issue : issues) {
+        for (GitHubRepoResponse.GitHubIssueResponse issue : issues) {
             String type = issue.pullRequest() != null ? "PR" : "Issue";
             String title = type + ": " + issue.title();
             String author = issue.user() != null ? issue.user().login() : "unknown";

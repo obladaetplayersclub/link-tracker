@@ -11,9 +11,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import backend.academy.linktracker.scrapper.client.StackOverflowClient;
-import backend.academy.linktracker.scrapper.client.dto.StackOverflowAnswer;
-import backend.academy.linktracker.scrapper.client.dto.StackOverflowAnswerResponse;
-import backend.academy.linktracker.scrapper.client.dto.StackOverflowUser;
+import backend.academy.linktracker.scrapper.client.dto.StackOverflow.StackOverflowAnswer;
+import backend.academy.linktracker.scrapper.client.dto.StackOverflow.StackOverflowAnswerResponse;
+import backend.academy.linktracker.scrapper.client.dto.StackOverflow.StackOverflowUser;
 import backend.academy.linktracker.scrapper.properties.StackoverflowProperties;
 import java.net.URI;
 import java.time.OffsetDateTime;

@@ -1,31 +1,25 @@
 package backend.academy.linktracker.scrapper.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import backend.academy.linktracker.scrapper.domain.Link;
-import backend.academy.linktracker.scrapper.dto.LinkUpdate;
-import backend.academy.linktracker.scrapper.parser.LinkParser;
-import backend.academy.linktracker.scrapper.parser.LinkUpdateInfo;
-import backend.academy.linktracker.scrapper.properties.AppProperties;
+import backend.academy.linktracker.scrapper.properties.LinkUpdaterProperties;
 import backend.academy.linktracker.scrapper.repository.LinkRepository;
 import java.net.URI;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.client.RestClientException;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 @ExtendWith(MockitoExtension.class)
 class LinkUpdaterTest {
@@ -34,143 +28,40 @@ class LinkUpdaterTest {
     private LinkRepository linkRepository;
 
     @Mock
-    private LinkParser gitHubParser;
+    private LinkChecker linkChecker;
 
     @Mock
-    private LinkParser stackOverflowParser;
-
-    @Mock
-    private MessageSender messageSender;
+    private ThreadPoolTaskExecutor linkUpdaterExecutor;
 
     private LinkUpdater linkUpdater;
 
     private static final URI GITHUB_URL = URI.create("https://github.com/user/repo");
     private static final URI SO_URL = URI.create("https://stackoverflow.com/questions/12345/title");
     private static final OffsetDateTime OLD_TIME = OffsetDateTime.of(2025, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC);
-    private static final OffsetDateTime NEW_TIME = OffsetDateTime.of(2025, 6, 1, 0, 0, 0, 0, ZoneOffset.UTC);
 
     @BeforeEach
     void setUp() {
-        AppProperties appProperties = new AppProperties();
-        appProperties.setBatchSize(100);
-        appProperties.setThreadCount(2);
-        linkUpdater = new LinkUpdater(
-                linkRepository, List.of(gitHubParser, stackOverflowParser), messageSender, appProperties);
+        LinkUpdaterProperties props = new LinkUpdaterProperties();
+        props.setBatchSize(100);
+        linkUpdater = new LinkUpdater(linkRepository, props, linkUpdaterExecutor, linkChecker);
+
+        when(linkUpdaterExecutor.submit(any(Runnable.class))).thenAnswer(invocation -> {
+            Runnable task = invocation.getArgument(0);
+            task.run();
+            return CompletableFuture.completedFuture(null);
+        });
     }
 
     @Test
-    void update_shouldSendNotification_whenGitHubIssueFound() {
-        Link link = new Link(1L, GITHUB_URL, List.of(), OLD_TIME);
-        when(linkRepository.findOldest(anyInt())).thenReturn(List.of(link));
-        when(gitHubParser.supports(GITHUB_URL)).thenReturn(true);
-        when(gitHubParser.checkUpdates(eq(GITHUB_URL), any()))
-                .thenReturn(List.of(new LinkUpdateInfo("Issue: Bug fix", "kostya", NEW_TIME, "Fixed the bug")));
-        when(linkRepository.findChatIdsByUrl(GITHUB_URL)).thenReturn(List.of(100L, 200L));
+    void update_shouldCallCheckLink_forEachLinkInBatch() {
+        Link link1 = new Link(1L, GITHUB_URL, List.of(), OLD_TIME);
+        Link link2 = new Link(2L, SO_URL, List.of(), OLD_TIME);
+        when(linkRepository.findOldest(anyInt())).thenReturn(List.of(link1, link2));
 
         linkUpdater.update();
 
-        ArgumentCaptor<LinkUpdate> captor = ArgumentCaptor.forClass(LinkUpdate.class);
-        verify(messageSender).send(captor.capture());
-        LinkUpdate sent = captor.getValue();
-        assertThat(sent.tgChatIds()).containsExactly(100L, 200L);
-        assertThat(sent.url()).isEqualTo(GITHUB_URL);
-        assertThat(sent.description()).contains("Issue: Bug fix");
-        assertThat(sent.description()).contains("kostya");
-    }
-
-    @Test
-    void update_shouldSendNotification_whenStackOverflowAnswerFound() {
-        Link link = new Link(2L, SO_URL, List.of(), OLD_TIME);
-        when(linkRepository.findOldest(anyInt())).thenReturn(List.of(link));
-        when(stackOverflowParser.supports(SO_URL)).thenReturn(true);
-        when(stackOverflowParser.checkUpdates(eq(SO_URL), any()))
-                .thenReturn(List.of(new LinkUpdateInfo("Новый ответ", "john", NEW_TIME, "Try using Stream API")));
-        when(linkRepository.findChatIdsByUrl(SO_URL)).thenReturn(List.of(300L));
-
-        linkUpdater.update();
-
-        ArgumentCaptor<LinkUpdate> captor = ArgumentCaptor.forClass(LinkUpdate.class);
-        verify(messageSender).send(captor.capture());
-        LinkUpdate sent = captor.getValue();
-        assertThat(sent.description()).contains("Новый ответ");
-        assertThat(sent.description()).contains("john");
-        assertThat(sent.description()).contains("Try using Stream API");
-    }
-
-    @Test
-    void update_shouldNotSend_whenNoUpdatesFound() {
-        Link link = new Link(1L, GITHUB_URL, List.of(), OLD_TIME);
-        when(linkRepository.findOldest(anyInt())).thenReturn(List.of(link));
-        when(gitHubParser.supports(GITHUB_URL)).thenReturn(true);
-        when(gitHubParser.checkUpdates(eq(GITHUB_URL), any())).thenReturn(List.of());
-
-        linkUpdater.update();
-
-        verify(messageSender, never()).send(any());
-    }
-
-    @Test
-    void update_shouldNotCrash_whenApiThrowsException() {
-        Link link = new Link(1L, GITHUB_URL, List.of(), OLD_TIME);
-        when(linkRepository.findOldest(anyInt())).thenReturn(List.of(link));
-        when(gitHubParser.supports(GITHUB_URL)).thenReturn(true);
-        when(gitHubParser.checkUpdates(eq(GITHUB_URL), any())).thenThrow(new RestClientException("API error"));
-
-        linkUpdater.update();
-
-        verify(messageSender, never()).send(any());
-    }
-
-    @Test
-    void update_shouldSkipLink_whenNoParserSupports() {
-        URI unsupportedUrl = URI.create("https://example.com/something");
-        Link link = new Link(1L, unsupportedUrl, List.of(), OLD_TIME);
-        when(linkRepository.findOldest(anyInt())).thenReturn(List.of(link));
-        when(gitHubParser.supports(unsupportedUrl)).thenReturn(false);
-        when(stackOverflowParser.supports(unsupportedUrl)).thenReturn(false);
-
-        linkUpdater.update();
-
-        verify(messageSender, never()).send(any());
-    }
-
-    @Test
-    void update_shouldProcessBatch_andIsolateErrors() {
-        Link goodLink = new Link(1L, GITHUB_URL, List.of(), OLD_TIME);
-        Link badLink = new Link(2L, SO_URL, List.of(), OLD_TIME);
-
-        when(linkRepository.findOldest(anyInt())).thenReturn(List.of(goodLink, badLink));
-
-        when(gitHubParser.supports(GITHUB_URL)).thenReturn(true);
-        when(gitHubParser.checkUpdates(eq(GITHUB_URL), any()))
-                .thenReturn(List.of(new LinkUpdateInfo("PR: New feature", "dev", NEW_TIME, "Added feature")));
-        when(linkRepository.findChatIdsByUrl(GITHUB_URL)).thenReturn(List.of(100L));
-
-        when(stackOverflowParser.supports(SO_URL)).thenReturn(true);
-        when(stackOverflowParser.checkUpdates(eq(SO_URL), any())).thenThrow(new RestClientException("SO down"));
-
-        linkUpdater.update();
-
-        verify(messageSender, times(1)).send(any());
-        ArgumentCaptor<LinkUpdate> captor = ArgumentCaptor.forClass(LinkUpdate.class);
-        verify(messageSender).send(captor.capture());
-        assertThat(captor.getValue().url()).isEqualTo(GITHUB_URL);
-    }
-
-    @Test
-    void update_shouldSendMultipleNotifications_whenMultipleUpdatesForOneLink() {
-        Link link = new Link(1L, GITHUB_URL, List.of(), OLD_TIME);
-        when(linkRepository.findOldest(anyInt())).thenReturn(List.of(link));
-        when(gitHubParser.supports(GITHUB_URL)).thenReturn(true);
-        when(gitHubParser.checkUpdates(eq(GITHUB_URL), any()))
-                .thenReturn(List.of(
-                        new LinkUpdateInfo("Issue: Bug 1", "user1", NEW_TIME, "First bug"),
-                        new LinkUpdateInfo("PR: Fix 2", "user2", NEW_TIME, "Second fix")));
-        when(linkRepository.findChatIdsByUrl(GITHUB_URL)).thenReturn(List.of(100L));
-
-        linkUpdater.update();
-
-        verify(messageSender, times(2)).send(any());
+        verify(linkChecker).checkLink(link1);
+        verify(linkChecker).checkLink(link2);
     }
 
     @Test
@@ -179,6 +70,20 @@ class LinkUpdaterTest {
 
         linkUpdater.update();
 
-        verify(messageSender, never()).send(any());
+        verify(linkChecker, never()).checkLink(any());
+    }
+
+    @Test
+    void update_shouldIsolateErrors_whenOneCheckLinkFails() {
+        Link goodLink = new Link(1L, GITHUB_URL, List.of(), OLD_TIME);
+        Link badLink = new Link(2L, SO_URL, List.of(), OLD_TIME);
+        when(linkRepository.findOldest(anyInt())).thenReturn(List.of(badLink, goodLink));
+        org.mockito.Mockito.doThrow(new RuntimeException("API error"))
+                .when(linkChecker)
+                .checkLink(badLink);
+
+        linkUpdater.update();
+
+        verify(linkChecker).checkLink(goodLink);
     }
 }

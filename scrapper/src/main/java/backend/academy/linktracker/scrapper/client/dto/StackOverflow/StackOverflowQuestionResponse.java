@@ -1,4 +1,4 @@
-package backend.academy.linktracker.scrapper.client.dto;
+package backend.academy.linktracker.scrapper.client.dto.StackOverflow;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;

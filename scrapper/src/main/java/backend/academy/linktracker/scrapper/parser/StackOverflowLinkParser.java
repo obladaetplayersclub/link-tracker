@@ -1,8 +1,8 @@
 package backend.academy.linktracker.scrapper.parser;
 
 import backend.academy.linktracker.scrapper.client.StackOverflowClient;
-import backend.academy.linktracker.scrapper.client.dto.StackOverflowAnswer;
-import backend.academy.linktracker.scrapper.client.dto.StackOverflowAnswerResponse;
+import backend.academy.linktracker.scrapper.client.dto.StackOverflow.StackOverflowAnswer;
+import backend.academy.linktracker.scrapper.client.dto.StackOverflow.StackOverflowAnswerResponse;
 import backend.academy.linktracker.scrapper.properties.StackoverflowProperties;
 import java.net.URI;
 import java.time.Instant;

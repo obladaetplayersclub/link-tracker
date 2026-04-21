@@ -18,8 +18,9 @@ spring:
 
 app:
   database-access-type: ORM
-  batch-size: 100
-  thread-count: 4
+  link-updater:
+    batch-size: 100
+    thread-count: 4
   bot:
     base-url: http://localhost:8080
   scheduler:

@@ -8,8 +8,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import backend.academy.linktracker.scrapper.client.GitHubClient;
-import backend.academy.linktracker.scrapper.client.dto.GitHubIssueResponse;
-import backend.academy.linktracker.scrapper.client.dto.GitHubUser;
+import backend.academy.linktracker.scrapper.client.dto.GitHub.GitHubRepoResponse;
+import backend.academy.linktracker.scrapper.client.dto.GitHub.GitHubUser;
 import java.net.URI;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -73,7 +73,7 @@ class GitHubLinkParserTest {
     void checkUpdates_shouldReturnIssueInfo_whenNewIssueFound() {
         URI url = URI.create("https://github.com/owner/repo");
         when(gitHubClient.getIssues("owner", "repo", SINCE.toString()))
-                .thenReturn(List.of(new GitHubIssueResponse(
+                .thenReturn(List.of(new GitHubRepoResponse.GitHubIssueResponse(
                         "Fix login bug", new GitHubUser("kostya"), CREATED, "Detailed description", null)));
 
         List<LinkUpdateInfo> updates = parser.checkUpdates(url, SINCE);
@@ -88,7 +88,7 @@ class GitHubLinkParserTest {
     void checkUpdates_shouldReturnPRInfo_whenNewPullRequestFound() {
         URI url = URI.create("https://github.com/owner/repo");
         when(gitHubClient.getIssues("owner", "repo", SINCE.toString()))
-                .thenReturn(List.of(new GitHubIssueResponse(
+                .thenReturn(List.of(new GitHubRepoResponse.GitHubIssueResponse(
                         "Add feature", new GitHubUser("dev"), CREATED, "New feature", new Object())));
 
         List<LinkUpdateInfo> updates = parser.checkUpdates(url, SINCE);
@@ -102,7 +102,8 @@ class GitHubLinkParserTest {
         URI url = URI.create("https://github.com/owner/repo");
         String longBody = "A".repeat(300);
         when(gitHubClient.getIssues("owner", "repo", SINCE.toString()))
-                .thenReturn(List.of(new GitHubIssueResponse("Issue", new GitHubUser("user"), CREATED, longBody, null)));
+                .thenReturn(List.of(new GitHubRepoResponse.GitHubIssueResponse(
+                        "Issue", new GitHubUser("user"), CREATED, longBody, null)));
 
         List<LinkUpdateInfo> updates = parser.checkUpdates(url, SINCE);
 
@@ -123,8 +124,8 @@ class GitHubLinkParserTest {
     void checkUpdates_shouldHandleNullBody() {
         URI url = URI.create("https://github.com/owner/repo");
         when(gitHubClient.getIssues("owner", "repo", SINCE.toString()))
-                .thenReturn(
-                        List.of(new GitHubIssueResponse("No body issue", new GitHubUser("user"), CREATED, null, null)));
+                .thenReturn(List.of(new GitHubRepoResponse.GitHubIssueResponse(
+                        "No body issue", new GitHubUser("user"), CREATED, null, null)));
 
         List<LinkUpdateInfo> updates = parser.checkUpdates(url, SINCE);
 
@@ -136,8 +137,10 @@ class GitHubLinkParserTest {
         URI url = URI.create("https://github.com/owner/repo");
         when(gitHubClient.getIssues("owner", "repo", SINCE.toString()))
                 .thenReturn(List.of(
-                        new GitHubIssueResponse("Issue 1", new GitHubUser("user1"), CREATED, "Body 1", null),
-                        new GitHubIssueResponse("PR 1", new GitHubUser("user2"), CREATED, "Body 2", new Object())));
+                        new GitHubRepoResponse.GitHubIssueResponse(
+                                "Issue 1", new GitHubUser("user1"), CREATED, "Body 1", null),
+                        new GitHubRepoResponse.GitHubIssueResponse(
+                                "PR 1", new GitHubUser("user2"), CREATED, "Body 2", new Object())));
 
         List<LinkUpdateInfo> updates = parser.checkUpdates(url, SINCE);
 
