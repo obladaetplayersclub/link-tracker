@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 
 import backend.academy.linktracker.bot.command.Command;
 import backend.academy.linktracker.bot.command.UnknownCommand;
+import backend.academy.linktracker.bot.state.UserStateManager;
 import com.pengrad.telegrambot.model.Chat;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
@@ -46,7 +47,11 @@ class CommandDispatcherTest {
         SendMessage expectedErrorResponse = new SendMessage(expectedChatId, "Неизвестная команда! Используйте /help");
         when(mockUnknownCommand.handle(update)).thenReturn(expectedErrorResponse);
 
-        CommandDispatcher dispatcher = new CommandDispatcher(List.of(mockStartCommand), mockUnknownCommand);
+        UserStateManager userStateManager = new UserStateManager();
+        StateHandler stateHandler = mock(StateHandler.class);
+
+        CommandDispatcher dispatcher =
+                new CommandDispatcher(List.of(mockStartCommand), mockUnknownCommand, userStateManager, stateHandler);
         SendMessage response = dispatcher.process(update);
 
         assertThat(response.getParameters().get("chat_id")).isEqualTo(expectedChatId);

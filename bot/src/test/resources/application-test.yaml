@@ -1,4 +1,6 @@
 app:
+  scrapper:
+    base-url: http://localhost
   telegram:
     url: ${wiremock.server.baseUrl}/bot
     token: test-token

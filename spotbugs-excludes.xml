@@ -68,4 +68,9 @@
     <Match>
         <Package name="~.*\.jmh_generated"/>
     </Match>
+
+    <!-- Exclude all classes in packages that contain "generated" (case-insensitive) -->
+    <Match>
+        <Package name="~.*[Gg]enerated.*" />
+    </Match>
 </FindBugsFilter>

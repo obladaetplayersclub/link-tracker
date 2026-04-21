@@ -1,0 +1,20 @@
+spring:
+  liquibase:
+    change-log: classpath:migrations/master.xml
+  jpa:
+    hibernate:
+      ddl-auto: none
+
+app:
+  database-access-type: SQL
+  bot:
+    base-url: http://localhost
+  scheduler:
+    interval: PT1H
+  github:
+    base-url: http://localhost
+    token: test-token
+  stackoverflow:
+    base-url: http://localhost
+    key: test-key
+    access-token: test-access-token

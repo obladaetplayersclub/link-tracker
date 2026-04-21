@@ -124,6 +124,11 @@
                 <version>${guava.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.google.errorprone</groupId>
+                <artifactId>error_prone_annotations</artifactId>
+                <version>2.41.0</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-collections4</artifactId>
                 <version>${commons-collections.version}</version>
@@ -308,6 +313,10 @@
                         <rulesets>
                             <ruleset>pmd.xml</ruleset>
                         </rulesets>
+                        <excludes>
+                            <exclude>**/generated-sources/**/*.java</exclude>
+                            <exclude>**/generated/**/*.java</exclude>
+                        </excludes>
                     </configuration>
                     <dependencies>
                         <dependency>
