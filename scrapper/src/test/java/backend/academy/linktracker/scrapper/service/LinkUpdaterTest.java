@@ -45,7 +45,7 @@ class LinkUpdaterTest {
         props.setBatchSize(100);
         linkUpdater = new LinkUpdater(linkRepository, props, linkUpdaterExecutor, linkChecker);
 
-        when(linkUpdaterExecutor.submit(any(Runnable.class))).thenAnswer(invocation -> {
+        org.mockito.Mockito.lenient().when(linkUpdaterExecutor.submit(any(Runnable.class))).thenAnswer(invocation -> {
             Runnable task = invocation.getArgument(0);
             task.run();
             return CompletableFuture.completedFuture(null);
