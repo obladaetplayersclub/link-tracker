@@ -7,6 +7,14 @@ spring:
 
 app:
   database-access-type: SQL
+  message-transport:
+    type: HTTP
+  kafka:
+    bootstrap-servers: localhost:9092
+    topic: link-updates-test
+    schema-registry-url: http://localhost:8085
+    partitions: 1
+    replication-factor: 1
   bot:
     base-url: http://localhost
   scheduler:

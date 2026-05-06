@@ -44,6 +44,8 @@
         <java.version>25</java.version>
         <maven.version>3.9.12</maven.version>
 
+        <avro.version>1.11.3</avro.version>
+        <confluent.version>7.7.1</confluent.version>
         <awaitility.version>4.3.0</awaitility.version>
         <commons-codec.version>1.21.0</commons-codec.version>
         <commons-collections.version>4.5.0</commons-collections.version>
@@ -215,6 +217,13 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
+
+    <repositories>
+        <repository>
+            <id>confluent</id>
+            <url>https://packages.confluent.io/maven/</url>
+        </repository>
+    </repositories>
 
     <build>
         <pluginManagement>
@@ -397,6 +406,11 @@
                     <groupId>org.jacoco</groupId>
                     <artifactId>jacoco-maven-plugin</artifactId>
                     <version>${jacoco-maven-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.avro</groupId>
+                    <artifactId>avro-maven-plugin</artifactId>
+                    <version>${avro.version}</version>
                 </plugin>
             </plugins>
         </pluginManagement>

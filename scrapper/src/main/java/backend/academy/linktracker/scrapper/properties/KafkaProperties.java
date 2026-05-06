@@ -20,6 +20,9 @@ public class KafkaProperties {
     @NotBlank
     private String topic;
 
+    @NotBlank
+    private String schemaRegistryUrl;
+
     @Positive
     private int partitions = 3;
 

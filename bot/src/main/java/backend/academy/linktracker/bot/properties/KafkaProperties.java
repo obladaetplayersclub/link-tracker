@@ -1,6 +1,7 @@
 package backend.academy.linktracker.bot.properties;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,4 +22,13 @@ public class KafkaProperties {
 
     @NotBlank
     private String groupId;
+
+    @NotBlank
+    private String dlqTopic = "link-updates.DLQ";
+
+    @PositiveOrZero
+    private int maxRetries = 3;
+
+    @PositiveOrZero
+    private long retryBackoffMs = 1000L;
 }

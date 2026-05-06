@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "name": "LinkUpdateEvent",
+  "namespace": "backend.academy.linktracker.events",
+  "fields": [
+    {"name": "id", "type": "long", "doc": "ID ссылки"},
+    {"name": "url", "type": "string", "doc": "URL ссылки"},
+    {"name": "description", "type": "string", "doc": "Описание изменений"},
+    {"name": "tgChatIds", "type": {"type": "array", "items": "long"}, "doc": "ID Telegram-чатов"}
+  ]
+}

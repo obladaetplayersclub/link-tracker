@@ -21,3 +21,6 @@ app:
     bootstrap-servers: localhost:9092,localhost:9094,localhost:9096
     topic: link-updates
     group-id: link-tracker-bot
+    dlq-topic: link-updates.DLQ
+    max-retries: 3
+    retry-backoff-ms: 1000

@@ -15,7 +15,7 @@ import org.springframework.web.client.RestClient;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "app.telegram.url=http://localhost:8080/bot")
+        properties = {"app.telegram.url=http://localhost:8080/bot", "app.message-transport.type=HTTP"})
 @ActiveProfiles("test")
 class BotUpdatesControllerTest {
 

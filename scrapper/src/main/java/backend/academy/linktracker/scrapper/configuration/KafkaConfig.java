@@ -1,7 +1,9 @@
 package backend.academy.linktracker.scrapper.configuration;
 
-import backend.academy.linktracker.scrapper.dto.LinkUpdate;
+import backend.academy.linktracker.events.LinkUpdateEvent;
 import backend.academy.linktracker.scrapper.properties.KafkaProperties;
+import io.confluent.kafka.serializers.KafkaAvroSerializer;
+import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.kafka.clients.admin.NewTopic;
@@ -14,7 +16,6 @@ import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
-import org.springframework.kafka.support.serializer.JacksonJsonSerializer;
 
 @Configuration
 @EnableConfigurationProperties(KafkaProperties.class)
@@ -27,11 +28,12 @@ public class KafkaConfig {
     }
 
     @Bean
-    public ProducerFactory<Long, LinkUpdate> producerFactory() {
+    public ProducerFactory<Long, LinkUpdateEvent> producerFactory() {
         Map<String, Object> config = new HashMap<>();
         config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers());
         config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, LongSerializer.class);
-        config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JacksonJsonSerializer.class);
+        config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class);
+        config.put(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, kafkaProperties.getSchemaRegistryUrl());
         config.put(ProducerConfig.ACKS_CONFIG, "all");
         config.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
         config.put(ProducerConfig.RETRIES_CONFIG, 5);
@@ -39,16 +41,18 @@ public class KafkaConfig {
     }
 
     @Bean
-    public KafkaTemplate<Long, LinkUpdate> kafkaTemplate() {
+    public KafkaTemplate<Long, LinkUpdateEvent> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 
     @Bean
     public NewTopic linkUpdatesTopic() {
+        int rf = kafkaProperties.getReplicationFactor();
+        int minIsr = Math.max(1, rf - 1);
         return TopicBuilder.name(kafkaProperties.getTopic())
                 .partitions(kafkaProperties.getPartitions())
-                .replicas(kafkaProperties.getReplicationFactor())
-                .config("min.insync.replicas", "2")
+                .replicas(rf)
+                .config("min.insync.replicas", String.valueOf(minIsr))
                 .build();
     }
 }
