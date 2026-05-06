@@ -33,6 +33,12 @@
             <Bug pattern="DM_EXIT"/>
         </Or>
     </Match>
+
+    <!-- Exclude Avro generated classes from MS_EXPOSE_REP -->
+    <Match>
+        <Class name="backend.academy.linktracker.events.LinkUpdateEvent" />
+        <Bug pattern="MS_EXPOSE_REP" />
+    </Match>
     <!-- Kotlin edge cases -->
     <Match>
         <Source name="~.*\.kt"/>

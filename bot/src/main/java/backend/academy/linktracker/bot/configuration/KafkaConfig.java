@@ -1,7 +1,9 @@
 package backend.academy.linktracker.bot.configuration;
 
-import backend.academy.linktracker.bot.dto.LinkUpdate;
 import backend.academy.linktracker.bot.properties.KafkaProperties;
+import backend.academy.linktracker.events.LinkUpdateEvent;
+import io.confluent.kafka.serializers.KafkaAvroDeserializer;
+import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
 import jakarta.validation.ValidationException;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,7 +27,6 @@ import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
-import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 import org.springframework.util.backoff.FixedBackOff;
 
 @Configuration
@@ -39,21 +40,19 @@ public class KafkaConfig {
     }
 
     @Bean
-    public ConsumerFactory<Long, LinkUpdate> consumerFactory() {
+    public ConsumerFactory<Long, LinkUpdateEvent> consumerFactory() {
         Map<String, Object> config = new HashMap<>();
         config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers());
         config.put(ConsumerConfig.GROUP_ID_CONFIG, kafkaProperties.getGroupId());
         config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         config.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+        config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class);
+        config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
+        config.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, KafkaAvroDeserializer.class);
+        config.put(KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG, kafkaProperties.getSchemaRegistryUrl());
+        config.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, true);
 
-        JacksonJsonDeserializer<LinkUpdate> jsonDeserializer = new JacksonJsonDeserializer<>(LinkUpdate.class);
-        jsonDeserializer.addTrustedPackages("backend.academy.linktracker.bot.dto");
-        jsonDeserializer.ignoreTypeHeaders();
-
-        ErrorHandlingDeserializer<LinkUpdate> errorHandlingDeserializer =
-                new ErrorHandlingDeserializer<>(jsonDeserializer);
-
-        return new DefaultKafkaConsumerFactory<>(config, new LongDeserializer(), errorHandlingDeserializer);
+        return new DefaultKafkaConsumerFactory<>(config);
     }
 
     @Bean
@@ -87,9 +86,9 @@ public class KafkaConfig {
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<Long, LinkUpdate> kafkaListenerContainerFactory(
+    public ConcurrentKafkaListenerContainerFactory<Long, LinkUpdateEvent> kafkaListenerContainerFactory(
             DefaultErrorHandler kafkaErrorHandler) {
-        ConcurrentKafkaListenerContainerFactory<Long, LinkUpdate> factory =
+        ConcurrentKafkaListenerContainerFactory<Long, LinkUpdateEvent> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
         factory.setCommonErrorHandler(kafkaErrorHandler);

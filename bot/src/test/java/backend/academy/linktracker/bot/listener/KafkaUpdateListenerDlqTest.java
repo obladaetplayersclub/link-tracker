@@ -10,9 +10,11 @@ import static org.mockito.Mockito.verify;
 import backend.academy.linktracker.bot.dto.LinkUpdate;
 import backend.academy.linktracker.bot.kafka.KafkaContainersConfiguration;
 import backend.academy.linktracker.bot.service.NotificationService;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import backend.academy.linktracker.events.LinkUpdateEvent;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.request.SendMessage;
+import io.confluent.kafka.serializers.KafkaAvroSerializer;
+import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
 import java.net.URI;
 import java.time.Duration;
 import java.util.List;
@@ -65,7 +67,7 @@ class KafkaUpdateListenerDlqTest extends KafkaContainersConfiguration {
     @Test
     void validationError_shouldSendToDlq_withoutRetry() throws Exception {
         LinkUpdate invalid = new LinkUpdate(1L, URI.create("https://github.com/test"), "desc", List.of());
-        sendJson("link-updates-dlq-test", invalid);
+        sendAvro("link-updates-dlq-test", invalid);
 
         try (KafkaConsumer<Long, String> dlqConsumer = createDlqConsumer("dlq-valid")) {
             dlqConsumer.subscribe(List.of("link-updates-dlq-test.DLQ"));
@@ -79,7 +81,7 @@ class KafkaUpdateListenerDlqTest extends KafkaContainersConfiguration {
         doThrow(new RuntimeException("Telegram down")).when(notificationService).sendUpdate(any(LinkUpdate.class));
 
         LinkUpdate valid = new LinkUpdate(1L, URI.create("https://github.com/test"), "desc", List.of(123L));
-        sendJson("link-updates-dlq-test", valid);
+        sendAvro("link-updates-dlq-test", valid);
 
         await().atMost(Duration.ofSeconds(20))
                 .untilAsserted(() -> verify(notificationService, atLeast(3)).sendUpdate(any(LinkUpdate.class)));
@@ -93,9 +95,25 @@ class KafkaUpdateListenerDlqTest extends KafkaContainersConfiguration {
         verify(telegramBot, org.mockito.Mockito.never()).execute(any(SendMessage.class));
     }
 
-    private void sendJson(String topic, LinkUpdate update) throws Exception {
-        ObjectMapper mapper = new ObjectMapper();
-        sendRawMessage(topic, update.id(), mapper.writeValueAsBytes(update));
+    private void sendAvro(String topic, LinkUpdate update) throws Exception {
+        Properties props = new Properties();
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA.getBootstrapServers());
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, LongSerializer.class);
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class);
+        props.put(
+                KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG,
+                "http://" + SCHEMA_REGISTRY.getHost() + ":" + SCHEMA_REGISTRY.getMappedPort(8081));
+
+        LinkUpdateEvent event = LinkUpdateEvent.newBuilder()
+                .setId(update.id())
+                .setUrl(update.url().toString())
+                .setDescription(update.description())
+                .setTgChatIds(update.tgChatIds())
+                .build();
+
+        try (KafkaProducer<Long, LinkUpdateEvent> producer = new KafkaProducer<>(props)) {
+            producer.send(new ProducerRecord<>(topic, update.id(), event)).get();
+        }
     }
 
     private void sendRawMessage(String topic, Long key, byte[] payload) throws Exception {

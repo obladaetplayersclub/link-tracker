@@ -7,9 +7,11 @@ import static org.mockito.Mockito.verify;
 
 import backend.academy.linktracker.bot.dto.LinkUpdate;
 import backend.academy.linktracker.bot.kafka.KafkaContainersConfiguration;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import backend.academy.linktracker.events.LinkUpdateEvent;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.request.SendMessage;
+import io.confluent.kafka.serializers.KafkaAvroSerializer;
+import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
 import java.net.URI;
 import java.time.Duration;
 import java.util.List;
@@ -18,7 +20,6 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.LongSerializer;
-import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -54,13 +55,20 @@ class KafkaUpdateListenerTest extends KafkaContainersConfiguration {
         Properties props = new Properties();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA.getBootstrapServers());
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, LongSerializer.class);
-        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class);
+        props.put(
+                KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG,
+                "http://" + SCHEMA_REGISTRY.getHost() + ":" + SCHEMA_REGISTRY.getMappedPort(8081));
 
-        ObjectMapper mapper = new ObjectMapper();
-        String json = mapper.writeValueAsString(update);
+        LinkUpdateEvent event = LinkUpdateEvent.newBuilder()
+                .setId(update.id())
+                .setUrl(update.url().toString())
+                .setDescription(update.description())
+                .setTgChatIds(update.tgChatIds())
+                .build();
 
-        try (KafkaProducer<Long, String> producer = new KafkaProducer<>(props)) {
-            producer.send(new ProducerRecord<>(topic, update.id(), json)).get();
+        try (KafkaProducer<Long, LinkUpdateEvent> producer = new KafkaProducer<>(props)) {
+            producer.send(new ProducerRecord<>(topic, update.id(), event)).get();
         }
     }
 }

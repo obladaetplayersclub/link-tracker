@@ -15,6 +15,9 @@ import org.springframework.validation.annotation.Validated;
 @NoArgsConstructor
 public class KafkaProperties {
     @NotBlank
+    private String schemaRegistryUrl;
+
+    @NotBlank
     private String bootstrapServers;
 
     @NotBlank

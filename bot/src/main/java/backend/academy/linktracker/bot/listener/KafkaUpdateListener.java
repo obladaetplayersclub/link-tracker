@@ -2,9 +2,11 @@ package backend.academy.linktracker.bot.listener;
 
 import backend.academy.linktracker.bot.dto.LinkUpdate;
 import backend.academy.linktracker.bot.service.NotificationService;
+import backend.academy.linktracker.events.LinkUpdateEvent;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ValidationException;
 import jakarta.validation.Validator;
+import java.net.URI;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +24,10 @@ public class KafkaUpdateListener {
     private final Validator validator;
 
     @KafkaListener(topics = "${app.kafka.topic}", groupId = "${app.kafka.group-id}")
-    public void onUpdate(LinkUpdate linkUpdate) {
+    public void onUpdate(LinkUpdateEvent event) {
+        LinkUpdate linkUpdate =
+                new LinkUpdate(event.getId(), URI.create(event.getUrl()), event.getDescription(), event.getTgChatIds());
+
         Set<ConstraintViolation<LinkUpdate>> violations = validator.validate(linkUpdate);
         if (!violations.isEmpty()) {
             String message = violations.stream()
