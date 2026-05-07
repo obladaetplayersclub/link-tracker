@@ -14,6 +14,7 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.LongDeserializer;
 import org.apache.kafka.common.serialization.LongSerializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,6 +35,7 @@ import org.springframework.util.backoff.FixedBackOff;
 @Configuration
 @EnableKafka
 @EnableConfigurationProperties(KafkaProperties.class)
+@ConditionalOnProperty(name = "app.message-transport.type", havingValue = "KAFKA")
 public class KafkaConfig {
     private final KafkaProperties kafkaProperties;
 

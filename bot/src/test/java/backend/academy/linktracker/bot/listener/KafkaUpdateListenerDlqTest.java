@@ -43,7 +43,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
             "app.kafka.dlq-topic=link-updates-dlq-test.DLQ",
             "app.kafka.group-id=test-bot-dlq-group",
             "app.kafka.max-retries=2",
-            "app.kafka.retry-backoff-ms=100"
+            "app.kafka.retry-backoff-ms=100",
+            "app.telegram.url=http://localhost:8080/bot",
+            "app.telegram.token=test-token"
         })
 class KafkaUpdateListenerDlqTest extends KafkaContainersConfiguration {
 

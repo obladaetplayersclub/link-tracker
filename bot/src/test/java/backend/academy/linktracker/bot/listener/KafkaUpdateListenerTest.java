@@ -32,7 +32,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
         properties = {
             "app.message-transport.type=KAFKA",
             "app.kafka.topic=link-updates-test",
-            "app.kafka.group-id=test-bot-listener-group"
+            "app.kafka.group-id=test-bot-listener-group",
+            "app.telegram.url=http://localhost:8080/bot",
+            "app.telegram.token=test-token"
         })
 class KafkaUpdateListenerTest extends KafkaContainersConfiguration {
 
