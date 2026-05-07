@@ -326,6 +326,11 @@
                             <exclude>**/generated-sources/**/*.java</exclude>
                             <exclude>**/generated/**/*.java</exclude>
                         </excludes>
+                        <excludeRoots>
+                            <excludeRoot>${project.build.directory}/generated-sources</excludeRoot>
+                            <excludeRoot>${project.build.directory}/generated-sources/avro</excludeRoot>
+                            <excludeRoot>${project.build.directory}/generated-sources/protobuf</excludeRoot>
+                        </excludeRoots>
                     </configuration>
                     <dependencies>
                         <dependency>
