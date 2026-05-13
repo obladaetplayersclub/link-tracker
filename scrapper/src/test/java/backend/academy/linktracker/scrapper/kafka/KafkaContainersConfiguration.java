@@ -1,5 +1,6 @@
 package backend.academy.linktracker.scrapper.kafka;
 
+import backend.academy.linktracker.scrapper.repository.ContainersConfiguration;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.GenericContainer;
@@ -9,7 +10,7 @@ import org.testcontainers.kafka.ConfluentKafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
 @Testcontainers
-public abstract class KafkaContainersConfiguration {
+public abstract class KafkaContainersConfiguration extends ContainersConfiguration {
 
     private static final Network NETWORK = Network.newNetwork();
 

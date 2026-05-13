@@ -3,6 +3,7 @@ package backend.academy.linktracker.scrapper.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import backend.academy.linktracker.scrapper.repository.ContainersConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +15,7 @@ import org.springframework.test.context.TestPropertySource;
 @SpringBootTest
 @ActiveProfiles("test")
 @TestPropertySource(properties = "app.message-transport.type=HTTP")
-class HttpMessageSenderSelectionTest {
+class HttpMessageSenderSelectionTest extends ContainersConfiguration {
 
     @Autowired
     private ApplicationContext context;
